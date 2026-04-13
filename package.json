@@ -1,0 +1,13 @@
+{
+  "name": "discord-reminder-bot",
+  "version": "1.0.0",
+  "description": "Discord bot that reminds you to take meds 2 hours after coming online",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.0",
+    "dotenv": "^16.4.0"
+  }
+}
