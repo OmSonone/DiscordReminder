@@ -59,11 +59,10 @@ client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {
     // User went offline
     wasOffline = true;
 
-    // Cancel any pending reminder
+    // Keep pending reminders. Once scheduled after a long offline gap,
+    // the reminder should still fire even if the user briefly goes offline again.
     if (reminderTimeout) {
-      clearTimeout(reminderTimeout);
-      reminderTimeout = null;
-      console.log('User went offline. Pending reminder cancelled.');
+      console.log('User went offline. Reminder remains scheduled.');
     }
     return;
   }
