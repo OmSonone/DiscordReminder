@@ -4,6 +4,7 @@ const { Client, GatewayIntentBits, Events } = require('discord.js');
 // ===== CONFIG =====
 const USER_ID = process.env.USER_ID;
 const CHANNEL_ID = process.env.CHANNEL_ID;
+const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID || null; // optional test server log channel
 const REMINDER_DELAY_MS = 2 * 60 * 60 * 1000; // 2 hours
 const MIN_OFFLINE_MS = 5 * 60 * 60 * 1000; // 5 hours
 const BUNNY_FACT_CHANCE = 0.2; // 20%
@@ -33,6 +34,16 @@ let reminderTimeout = null;
 function getRandomBunnyFact() {
   const index = Math.floor(Math.random() * BUNNY_FACTS.length);
   return BUNNY_FACTS[index];
+}
+
+async function logToChannel(message) {
+  if (!LOG_CHANNEL_ID) return;
+  try {
+    const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
+    await logChannel.send(`📋 **[Log]** ${message}`);
+  } catch (err) {
+    console.error('Failed to send to log channel:', err.message);
+  }
 }
 
 client.once(Events.ClientReady, () => {
@@ -86,20 +97,25 @@ client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {
     reminderTimeout = setTimeout(async () => {
       try {
         const channel = await client.channels.fetch(CHANNEL_ID);
-        await channel.send(`<@${USER_ID}> get yo chud ass to them meds 💊 rn mf`);
+        const mainMsg = `<@${USER_ID}> get yo chud ass to them meds 💊 rn mf`;
+        await channel.send(mainMsg);
+        await logToChannel(`Reminder sent to <@${USER_ID}>: ${mainMsg}`);
 
         const easterEggRoll = Math.random();
         if (easterEggRoll < SPECIAL_MESSAGE_CHANCE) {
-          await channel.send('Congrats on rolling the 1 in a 100 message mf! I want you to know that you are amazing, keep doing what you do and live a glorious life bestie!');
+          const specialMsg = 'Congrats on rolling the 1 in a 100 message mf! I want you to know that you are amazing, keep doing what you do and live a glorious life bestie!';
+          await channel.send(specialMsg);
+          await logToChannel(`Special 1-in-100 message sent: ${specialMsg}`);
           console.log('Reminder sent with special 1-in-100 message.');
         } else if (easterEggRoll < SPECIAL_MESSAGE_CHANCE + BUNNY_FACT_CHANCE) {
           const bunnyFact = getRandomBunnyFact();
-          await channel.send(
-            'This reminder had a 20% chance of sending you a bunny fact. Congrats on the win. ' +
-              `\n🐰 Bunny fact: ${bunnyFact}`
-          );
+          const bunnyMsg = 'This reminder had a 20% chance of sending you a bunny fact. Congrats on the win. ' +
+              `\n🐰 Bunny fact: ${bunnyFact}`;
+          await channel.send(bunnyMsg);
+          await logToChannel(`Bunny fact easter egg sent: ${bunnyMsg}`);
           console.log('Reminder sent with bunny fact easter egg.');
         } else {
+          await logToChannel('Reminder sent (no easter egg this time).');
           console.log('Reminder sent (no bunny fact this time).');
         }
       } catch (err) {
