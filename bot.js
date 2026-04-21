@@ -52,14 +52,29 @@ client.once(Events.ClientReady, () => {
   console.log(`Will send reminders to channel ${CHANNEL_ID}`);
 });
 
+function formatClientStatus(presence) {
+  if (!presence?.clientStatus) return 'unknown';
+  const cs = presence.clientStatus;
+  const parts = [];
+  if (cs.desktop) parts.push(`desktop: ${cs.desktop}`);
+  if (cs.mobile) parts.push(`mobile: ${cs.mobile}`);
+  if (cs.web) parts.push(`web: ${cs.web}`);
+  return parts.length ? parts.join(', ') : 'none';
+}
+
 client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {
-  // Only care about our user
+  // This space is for logging the extra shit now
   if (newPresence.userId !== USER_ID) return;
 
   const oldStatus = oldPresence?.status || 'offline';
   const newStatus = newPresence.status;
+  const timestamp = new Date().toLocaleString();
 
-  console.log(`[${new Date().toLocaleString()}] Status change: ${oldStatus} → ${newStatus}`);
+  const oldClient = formatClientStatus(oldPresence);
+  const newClient = formatClientStatus(newPresence);
+  const clientChanged = oldClient !== newClient;
+
+  console.log(`[${timestamp}] Status: ${oldStatus} → ${newStatus} | Platforms: ${newClient}${clientChanged ? ` (was: ${oldClient})` : ''}`);
 
   if (newStatus === 'offline' || newStatus === 'invisible') {
     // Track when the offline period starts.
